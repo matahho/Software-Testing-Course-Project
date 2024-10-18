@@ -7,6 +7,6 @@ public class Rating {
     public double overall;
 
     public int getStarCount() {
-        return (int) Math.min(Math.round(overall), 5);
+        return (int) Math.max(Math.min(Math.round(overall), 5), Double.MIN_VALUE);
     }
 }
