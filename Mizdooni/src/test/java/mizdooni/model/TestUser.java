@@ -52,7 +52,7 @@ public class TestUser {
 
     @Test
     public void givenRestaurant_whenCheckIfReserved_thenCorrectReservationStatusReturned() {
-        Restaurant differentRestaurant = Mockito.mock(Restaurant.class);it a
+        Restaurant differentRestaurant = Mockito.mock(Restaurant.class);
         Reservation reservation = new Reservation(user, restaurant, Mockito.mock(Table.class), LocalDateTime.now().minusDays(1));
         Reservation futureReservation = new Reservation(user, restaurant, Mockito.mock(Table.class), LocalDateTime.now().plusDays(1));
 
