@@ -3,6 +3,8 @@ package mizdooni.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,11 +35,12 @@ public class TestUser {
 
     }
 
-    @Test
-    public void newUserExists_tryToCheckHisPassword_hisPasswordCheckedCorrectly(){
+    @ParameterizedTest
+    @ValueSource(strings = {"12345678", "", "salamKhobi?", "dwad32312adfwad"})
+    public void newUserExists_tryToCheckHisPassword_hisPasswordCheckedCorrectly(String wrong_pass){
         String actualPassword = "password@123";
         assertTrue(user.checkPassword(actualPassword), "Checking password method functionality");
-        assertFalse(user.checkPassword("Random-wrong-password"), "Checking password method functionality");
+        assertFalse(user.checkPassword(wrong_pass), "Checking password method functionality");
     }
 
     @Test
