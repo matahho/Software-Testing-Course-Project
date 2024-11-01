@@ -216,4 +216,29 @@ public class TestAuthenticationController {
 
     }
 
+    @Test
+    public void noUserExists_tryToValidateEmail_validatedCorrectly(){
+        Response response = authenticationController.validateEmail("Mahdi@test.com");
+        assertEquals("email not registered", response.getMessage());
+        assertEquals(HttpStatus.OK, response.getStatus());
+
+    }
+    @Test
+    public void noUserExists_tryToValidateEmailWithInvalidFormat_validatedCorrectly(){
+        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.validateEmail("mahdi@space!"));
+        assertEquals("invalid email format", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+
+    }
+    @Test
+    public void UserExists_tryToValidateSameEmail_emailAlreadyExists(){
+        when(userService.emailExists(anyString())).thenReturn(true);
+
+        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.validateEmail("mahdi@gmail.com"));
+        assertEquals("email already registered", exception.getMessage());
+        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+
+    }
+
+
 }
