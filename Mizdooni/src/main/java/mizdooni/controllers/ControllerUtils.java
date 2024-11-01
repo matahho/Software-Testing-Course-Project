@@ -11,12 +11,12 @@ import java.util.Map;
 
 @Component
 public class ControllerUtils {
-    static final String PARAMS_MISSING = "parameters missing";
-    static final String PARAMS_BAD_TYPE = "bad parameter type";
+    public static final String PARAMS_MISSING = "parameters missing";
+    public static final String PARAMS_BAD_TYPE = "bad parameter type";
 
-    static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
-    static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     static final String PLACEHOLDER_IMAGE = "/restaurant-placeholder.jpg";
 
