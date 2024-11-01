@@ -150,4 +150,46 @@ public class TestAuthenticationController {
         assertEquals(PARAMS_MISSING, exception.getMessage());
         verify(userService, never()).login(anyString(), anyString());
     }
+
+    @Test
+    public void userLoggedIn_tryToGetCurrentUser_currentUserRetrievedCorrectly(){
+        User mockUser = new User("testUser", "testPassword", "test@example.com", new Address("TestCountry", "TestCity", null), User.Role.client);
+        when(userService.getCurrentUser()).thenReturn(mockUser);
+
+        Response response = authenticationController.user();
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertEquals("current user", response.getMessage());
+        assertEquals(mockUser, response.getData());
+        verify(userService).getCurrentUser();
+    }
+
+    @Test
+    public void userNotLoggedIn_tryToGetCurrentUser_UnauthenticatedErrorRaisedProperly(){
+        when(userService.getCurrentUser()).thenReturn(null);
+
+        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.user());
+        assertEquals(HttpStatus.UNAUTHORIZED ,exception.getStatus());
+        assertEquals("no user logged in", exception.getMessage());
+        verify(userService).getCurrentUser();
+    }
+
+    @Test
+    public void userHaveLoggedIn_tryToLogout_loggedOutCorrectly(){
+        when(userService.logout()).thenReturn(true);
+
+        Response response = authenticationController.logout();
+        assertEquals("logout successful",response.getMessage());
+        assertEquals(HttpStatus.OK, response.getStatus());
+        verify(userService).logout();
+    }
+    @Test
+    public void userNotLoggedIn_tryToLogout_properErrorRaised(){
+        when(userService.logout()).thenReturn(false);
+
+        ResponseException response = assertThrows(ResponseException.class, () -> authenticationController.logout());
+        assertEquals("no user logged in",response.getMessage());
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatus());
+        verify(userService).logout();
+    }
+
 }
