@@ -1,7 +1,5 @@
-package mizdooni.controller;
+package mizdooni.controllers;
 
-import mizdooni.controllers.ControllerUtils;
-import mizdooni.controllers.ReservationController;
 import mizdooni.exceptions.ReservationCannotBeCancelled;
 import mizdooni.exceptions.UserNotManager;
 import mizdooni.model.*;
@@ -20,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

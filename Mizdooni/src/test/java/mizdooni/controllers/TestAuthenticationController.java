@@ -1,6 +1,5 @@
-package mizdooni.controller;
+package mizdooni.controllers;
 
-import mizdooni.controllers.AuthenticationController;
 import mizdooni.exceptions.DuplicatedUsernameEmail;
 import mizdooni.exceptions.InvalidEmailFormat;
 import mizdooni.exceptions.InvalidUsernameFormat;
