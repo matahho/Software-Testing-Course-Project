@@ -30,28 +30,33 @@ public class TestAuthenticationController {
     @InjectMocks
     private AuthenticationController authenticationController;
 
-    private Map<String, Object> authParams = new HashMap<>();
+    private Map<String, Object> signupParams = new HashMap<>();
+    private Map<String, String> loginParams = new HashMap<>();
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        authParams.put("username", "testUser");
-        authParams.put("password", "testPassword");
-        authParams.put("email", "test@example.com");
-        authParams.put("role", "client");
+        signupParams.put("username", "testUser");
+        signupParams.put("password", "testPassword");
+        signupParams.put("email", "test@example.com");
+        signupParams.put("role", "client");
         Map<String, String> address = new HashMap<>();
         address.put("country", "TestCountry");
         address.put("city", "TestCity");
-        authParams.put("address", address);
+        signupParams.put("address", address);
+
+        loginParams.put("username", "testUser");
+        loginParams.put("password", "testPassword");
+
     }
 
     @Test
     public void noUserExists_tryToSignupWithMissingAuthParam_failedToSignup() throws DuplicatedUsernameEmail, InvalidUsernameFormat, InvalidEmailFormat {
-        authParams.remove("email");
+        signupParams.remove("email");
         ResponseException exception = assertThrows(
                 ResponseException.class,
-                () -> authenticationController.signup(authParams),
+                () -> authenticationController.signup(signupParams),
                 "Auth params are missed so you cannot signup and we expect an exception!"
         );
 
@@ -64,11 +69,11 @@ public class TestAuthenticationController {
 
     @Test
     public void noUserExists_tryToSignupWithInvalidRole_failedToSignupDueToBadType() throws DuplicatedUsernameEmail, InvalidUsernameFormat, InvalidEmailFormat {
-        authParams.put("role", "RandomWrongRole");
+        signupParams.put("role", "RandomWrongRole");
 
         ResponseException exception = assertThrows(
                 ResponseException.class,
-                () -> authenticationController.signup(authParams),
+                () -> authenticationController.signup(signupParams),
                 "Auth params are wrong it type, so you cannot signup and we expect an exception!"
         );
 
@@ -87,7 +92,7 @@ public class TestAuthenticationController {
         when(userService.getCurrentUser()).thenReturn(mockUser);
         // _____
 
-        Response response = authenticationController.signup(authParams);
+        Response response = authenticationController.signup(signupParams);
 
         assertEquals("signup successful", response.getMessage());
         assertEquals(mockUser, response.getData());
@@ -100,10 +105,49 @@ public class TestAuthenticationController {
     public void userExists_tryToSignupWithSameEmailAddress_failed() throws Exception{
         doThrow(new DuplicatedUsernameEmail()).when(userService).signup(anyString(), anyString(), anyString(), any(Address.class), any(User.Role.class));
 
-        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.signup(authParams));
+        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.signup(signupParams));
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
         verify(userService).signup(anyString(), anyString(), anyString(), any(Address.class), any(User.Role.class));
     }
 
+    @Test
+    public void userExists_tryToLogin_successfullyLoggedIn(){
+        when(userService.login(anyString(), anyString())).thenReturn(true);
 
+        Response response = authenticationController.login(loginParams);
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertEquals("login successful", response.getMessage());
+        verify(userService).login(anyString(), anyString());
+
+    }
+
+    @Test
+    public void userExists_tryToLoginWithWrongPassword_notAllowed(){
+        loginParams.put("password", "InvalidPassword");
+        when(userService.login("testUser", "InvalidPassword")).thenReturn(false);
+
+        ResponseException exception = assertThrows(ResponseException.class , ()-> authenticationController.login(loginParams));
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatus());
+        assertEquals("invalid username or password", exception.getMessage());
+        verify(userService).login("testUser", "InvalidPassword");
+
+    }
+
+    @Test
+    public void userExists_tryToLoginWithNullParam_failedToLogin() {
+        loginParams.put("password" , null);
+        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.login(loginParams));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals(PARAMS_MISSING, exception.getMessage());
+        verify(userService, never()).login(anyString(), anyString());
+    }
+
+
+    @Test
+    public void userExists_tryToLoginWithMissingParameter_failedToLogin() {
+        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.login(new HashMap<>()));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals(PARAMS_MISSING, exception.getMessage());
+        verify(userService, never()).login(anyString(), anyString());
+    }
 }
