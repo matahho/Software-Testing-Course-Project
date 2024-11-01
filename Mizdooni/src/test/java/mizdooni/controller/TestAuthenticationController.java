@@ -192,4 +192,28 @@ public class TestAuthenticationController {
         verify(userService).logout();
     }
 
+    @Test
+    public void noUserExists_tryToValidateUserName_validatedCorrectly(){
+        Response response = authenticationController.validateUsername("Mahdi");
+        assertEquals("username is available", response.getMessage());
+        assertEquals(HttpStatus.OK, response.getStatus());
+
+    }
+    @Test
+    public void noUserExists_tryToValidateUserNameWithInvalidFormat_validatedCorrectly(){
+        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.validateUsername("mahdi with space"));
+        assertEquals("invalid username format", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+
+    }
+    @Test
+    public void UserExists_tryToValidateSameUsername_usernameAlreadyExists(){
+        when(userService.usernameExists(anyString())).thenReturn(true);
+
+        ResponseException exception = assertThrows(ResponseException.class, () -> authenticationController.validateUsername("mahdi"));
+        assertEquals("username already exists", exception.getMessage());
+        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+
+    }
+
 }
