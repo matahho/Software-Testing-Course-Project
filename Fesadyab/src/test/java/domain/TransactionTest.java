@@ -7,21 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TransactionTest {
-    Transaction t1 = new Transaction();
-    Transaction t2 = new Transaction();
+    Transaction t1 ;
+    Transaction t2 ;
     @BeforeEach
     public void set_up(){
         // Set up T1
-        t1.transactionId = 1;
-        t1.accountId = 1;
-        t1.amount = 100;
-        t1.isDebit = false;
-
+        t1 = new Transaction(1, 1, 100, false);
         // Set up T2
-        t2.transactionId = 2;
-        t2.accountId = 2;
-        t2.amount = 200;
-        t2.isDebit = false;
+        t2 = new Transaction(2, 2, 200, false);
 
     }
     @Test
