@@ -90,4 +90,15 @@ public class TransactionEngineTest {
 
         assertNotEquals(0, engine.detectFraudulentTransaction(new Transaction(4, 1, 500, true)));
     }
+
+    @Test
+    public void tt(){
+        engine.transactionHistory.add(new Transaction(1, 1, 100, false));
+        engine.transactionHistory.add(new Transaction(2, 1, 200, false));
+        engine.transactionHistory.add(new Transaction(3, 1, 300, false));
+        assertEquals(200 , engine.getAverageTransactionAmountByAccount(1));
+
+        assertEquals(0, engine.detectFraudulentTransaction(new Transaction(4, 1, 300, true)));
+    }
+
 }
