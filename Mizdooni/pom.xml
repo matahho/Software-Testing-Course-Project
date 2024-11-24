@@ -17,7 +17,7 @@
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.jupiter.version>5.1.0</junit.jupiter.version>
+        <junit.jupiter.version>5.10.2</junit.jupiter.version>
         <mockito.version>5.5.0</mockito.version>
     </properties>
 
@@ -25,6 +25,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- Spring Boot Starter Test (for @WebMvcTest and testing support) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <!--          Unit Tests' stuffs          -->
         <dependency>
