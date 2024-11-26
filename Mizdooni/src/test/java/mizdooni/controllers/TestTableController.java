@@ -1,5 +1,6 @@
 package mizdooni.controllers;
 
+import mizdooni.exceptions.RestaurantNotFound;
 import mizdooni.model.Restaurant;
 import mizdooni.model.Table;
 import mizdooni.service.RestaurantService;
@@ -37,7 +38,7 @@ public class TestTableController {
     private RestaurantService restaurantService;
 
     @Test
-    void aTableInARestaurantExists_getTablesCalledForRestaurant_tableReturned() throws Exception {
+    void twoTablesInARestaurantExists_getTablesCalledForRestaurant_tablesReturned() throws Exception {
         when(restaurantService.getRestaurant(anyInt())).thenReturn(mock(Restaurant.class));
         when(tableService.getTables(anyInt())).thenReturn(List.of(
                 new Table(0, 0, 1),
@@ -45,7 +46,8 @@ public class TestTableController {
         ));
 
         this.mockMvc.perform(get("/tables/{restaurantId}", 0))
-                .andExpect(status().isOk()) // Assert HTTP 200 status
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("tables listed"))
                 .andExpect(jsonPath("$.data[0].tableNumber").value(0))
@@ -53,4 +55,20 @@ public class TestTableController {
                 .andExpect(jsonPath("$.data[1].tableNumber").value(1))
                 .andExpect(jsonPath("$.data[1].seatsNumber").value(2));
     }
+
+    @Test
+    void tablesExist_getTablesCalledWithWrongRestaurantId_restaurantNotFound() throws Exception {
+        when(restaurantService.getRestaurant(anyInt())).thenReturn(mock(Restaurant.class));
+        when(tableService.getTables(anyInt())).thenThrow(new RestaurantNotFound());
+
+        this.mockMvc.perform(get("/tables/{restaurantId}", 0))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").isNotEmpty()) // Ensuring timestamp is included
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error").value("RestaurantNotFound"))
+                .andExpect(jsonPath("$.message").value("Restaurant not found.")); //Complete this call
+
+    }
+
 }
