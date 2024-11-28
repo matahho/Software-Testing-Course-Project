@@ -342,4 +342,26 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.data[1].description").value("test Descriptions2"));
     }
 
+    @Test
+    void getRestaurantLocations_returnsLocationsSuccessfully() throws Exception {
+        Map<String, Set<String>> locations = Map.of(
+                "USA", Set.of("New York", "Los Angeles"),
+                "Canada", Set.of("Toronto", "Vancouver")
+        );
+
+        when(service.getRestaurantLocations()).thenReturn(locations);
+
+        mockMvc.perform(get("/restaurants/locations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("restaurant locations"))
+                .andExpect(jsonPath("$.data").isMap())
+                .andExpect(jsonPath("$.data.USA").isArray())
+                .andExpect(jsonPath("$.data.USA.length()").value(2))
+                .andExpect(jsonPath("$.data.USA").value(org.hamcrest.Matchers.containsInAnyOrder("New York", "Los Angeles")))
+                .andExpect(jsonPath("$.data.Canada").isArray())
+                .andExpect(jsonPath("$.data.Canada.length()").value(2))
+                .andExpect(jsonPath("$.data.Canada").value(org.hamcrest.Matchers.containsInAnyOrder("Toronto", "Vancouver")));
+    }
+
 }
