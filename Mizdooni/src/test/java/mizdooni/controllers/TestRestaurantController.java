@@ -7,6 +7,7 @@ import mizdooni.exceptions.UserNotManager;
 import mizdooni.model.Address;
 import mizdooni.model.Restaurant;
 import mizdooni.model.User;
+import mizdooni.response.PagedList;
 import mizdooni.service.RestaurantService;
 import mizdooni.service.ServiceUtils;
 import mizdooni.service.UserService;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.when;
@@ -88,6 +90,83 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("restaurant not found"));
     }
+
+    @Test
+    public void someRestaurantsExist_tryToListAllWithoutAnyFilter_allListed() throws Exception{
+        PagedList<Restaurant> pagedList = new PagedList<>(List.of(r1, r2), 1, 10);
+        when(service.getRestaurants(anyInt(), any())).thenReturn(pagedList);
+
+        mockMvc.perform(get("/restaurants").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("restaurants listed"))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.hasNext").value(false))
+                .andExpect(jsonPath("$.data.totalPages").value(1))
+                .andExpect(jsonPath("$.data.size").value(2))
+                .andExpect(jsonPath("$.data.pageList[0].id").value(0))
+                .andExpect(jsonPath("$.data.pageList[0].name").value("testRestaurant-1"))
+                .andExpect(jsonPath("$.data.pageList[0].type").value("TestType1"))
+                .andExpect(jsonPath("$.data.pageList[0].startTime").value("12:00"))
+                .andExpect(jsonPath("$.data.pageList[0].endTime").value("23:00"))
+                .andExpect(jsonPath("$.data.pageList[0].description").value("test Descriptions1"))
+                .andExpect(jsonPath("$.data.pageList[0].managerUsername").value("Manager1"))
+                .andExpect(jsonPath("$.data.pageList[0].image").value("Test Image1"))
+                .andExpect(jsonPath("$.data.pageList[0].maxSeatsNumber").value(1))
+                .andExpect(jsonPath("$.data.pageList[0].starCount").value(0))
+                .andExpect(jsonPath("$.data.pageList[1].id").value(1))
+                .andExpect(jsonPath("$.data.pageList[1].name").value("testRestaurant-2"))
+                .andExpect(jsonPath("$.data.pageList[1].type").value("TestType2"))
+                .andExpect(jsonPath("$.data.pageList[1].startTime").value("18:00"))
+                .andExpect(jsonPath("$.data.pageList[1].endTime").value("22:00"))
+                .andExpect(jsonPath("$.data.pageList[1].description").value("test Descriptions2"))
+                .andExpect(jsonPath("$.data.pageList[1].managerUsername").value("Manager1"))
+                .andExpect(jsonPath("$.data.pageList[1].image").value("Test Image2"))
+                .andExpect(jsonPath("$.data.pageList[1].maxSeatsNumber").value(1))
+                .andExpect(jsonPath("$.data.pageList[1].starCount").value(0))
+                .andDo(print());
+
+    }
+
+    @Test
+    public void someRestaurantsExist_tryToListAllWithSingleObjectPaginator_paginatedCorrectly() throws Exception {
+        List<Restaurant> restaurants = List.of(r1, r2);
+
+        // Test Page 1
+        PagedList<Restaurant> page1 = new PagedList<>(restaurants, 1, 1);
+        when(service.getRestaurants(eq(1), any())).thenReturn(page1);
+
+        mockMvc.perform(get("/restaurants").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("restaurants listed"))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.hasNext").value(true)) // More pages exist
+                .andExpect(jsonPath("$.data.totalPages").value(2))
+                .andExpect(jsonPath("$.data.size").value(1))
+                .andExpect(jsonPath("$.data.pageList[0].id").value(0))
+                .andExpect(jsonPath("$.data.pageList[0].name").value("testRestaurant-1"));
+
+        // Test Page 2
+        PagedList<Restaurant> page2 = new PagedList<>(restaurants, 2, 1);
+        when(service.getRestaurants(eq(2), any())).thenReturn(page2);
+
+        mockMvc.perform(get("/restaurants").param("page", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("restaurants listed"))
+                .andExpect(jsonPath("$.data.page").value(2))
+                .andExpect(jsonPath("$.data.hasNext").value(false)) // No more pages
+                .andExpect(jsonPath("$.data.totalPages").value(2))
+                .andExpect(jsonPath("$.data.size").value(1))
+                .andExpect(jsonPath("$.data.pageList[0].id").value(1))
+                .andExpect(jsonPath("$.data.pageList[0].name").value("testRestaurant-2"));
+
+    }
+
+
+
+
 
 
     @Test void someRestaurantExists_tryToCreateNewOne_successfullyCreated() throws Exception{

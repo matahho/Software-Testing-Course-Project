@@ -33,6 +33,7 @@ class RestaurantController {
     public Response getRestaurants(@RequestParam int page, RestaurantSearchFilter filter) {
         try {
             PagedList<Restaurant> restaurants = restaurantService.getRestaurants(page, filter);
+            System.out.println("PagedList data: " + restaurants.getPageList());
             return Response.ok("restaurants listed", restaurants);
         } catch (Exception ex) {
             throw new ResponseException(HttpStatus.BAD_REQUEST, ex);
