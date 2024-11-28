@@ -28,7 +28,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -281,6 +283,63 @@ public class TestRestaurantController {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("User is not a manager."));
+    }
+
+    @Test
+    void noRestaurantExists_tryToValidateNewName_nameIsAvailable() throws Exception {
+        when(service.restaurantExists(anyString())).thenReturn(false);
+
+        mockMvc.perform(get("/validate/restaurant-name")
+                        .param("data", "Pizza Place"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("restaurant name is available"));
+    }
+
+    @Test
+    void aRestaurantExists_tryToValidateNewName_nameAlreadyExists() throws Exception {
+        when(service.restaurantExists(anyString())).thenReturn(true);
+
+        mockMvc.perform(get("/validate/restaurant-name")
+                        .param("data", "Pizza Place"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("restaurant name is taken"));
+    }
+
+    @Test
+    void someRestaurantsExist_callRestaurantTypes_restaurantTypesReturned() throws Exception {
+        Set<String> restaurantTypes = Set.of("Persian", "Chinese", "Mexican");
+
+        when(service.getRestaurantTypes()).thenReturn(restaurantTypes);
+
+        mockMvc.perform(get("/restaurants/types"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("restaurant types"))
+                .andExpect(jsonPath("$.data.length()").value(restaurantTypes.size()))
+                .andExpect(jsonPath("$.data").value(org.hamcrest.Matchers.containsInAnyOrder(
+                        "Mexican", "Persian", "Chinese"
+                )));
+    }
+
+    @Test
+    void someRestaurantsExist_tryToFindRestaurantWithSomeManager_restaurantOfManagerReturned() throws Exception {
+        List<Restaurant> restaurants = List.of(r1, r2);
+        when(service.getManagerRestaurants(manager.getId())).thenReturn(restaurants);
+
+        mockMvc.perform(get("/restaurants/manager/{managerId}", manager.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("manager restaurants listed"))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(restaurants.size()))
+                .andExpect(jsonPath("$.data[0].name").value("testRestaurant-1"))
+                .andExpect(jsonPath("$.data[0].type").value("TestType1"))
+                .andExpect(jsonPath("$.data[0].description").value("test Descriptions1"))
+                .andExpect(jsonPath("$.data[1].name").value("testRestaurant-2"))
+                .andExpect(jsonPath("$.data[1].type").value("TestType2"))
+                .andExpect(jsonPath("$.data[1].description").value("test Descriptions2"));
     }
 
 }
