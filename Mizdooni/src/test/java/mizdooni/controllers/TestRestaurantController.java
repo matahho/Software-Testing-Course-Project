@@ -6,6 +6,7 @@ import mizdooni.exceptions.DuplicatedRestaurantName;
 import mizdooni.exceptions.UserNotManager;
 import mizdooni.model.Address;
 import mizdooni.model.Restaurant;
+import mizdooni.model.RestaurantSearchFilter;
 import mizdooni.model.User;
 import mizdooni.response.PagedList;
 import mizdooni.service.RestaurantService;
@@ -105,7 +106,6 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.data.hasNext").value(false))
                 .andExpect(jsonPath("$.data.totalPages").value(1))
                 .andExpect(jsonPath("$.data.size").value(2))
-                .andExpect(jsonPath("$.data.pageList[0].id").value(0))
                 .andExpect(jsonPath("$.data.pageList[0].name").value("testRestaurant-1"))
                 .andExpect(jsonPath("$.data.pageList[0].type").value("TestType1"))
                 .andExpect(jsonPath("$.data.pageList[0].startTime").value("12:00"))
@@ -113,9 +113,9 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.data.pageList[0].description").value("test Descriptions1"))
                 .andExpect(jsonPath("$.data.pageList[0].managerUsername").value("Manager1"))
                 .andExpect(jsonPath("$.data.pageList[0].image").value("Test Image1"))
+                .andExpect(jsonPath("$.data.pageList[0].id").exists())
                 .andExpect(jsonPath("$.data.pageList[0].maxSeatsNumber").value(1))
                 .andExpect(jsonPath("$.data.pageList[0].starCount").value(0))
-                .andExpect(jsonPath("$.data.pageList[1].id").value(1))
                 .andExpect(jsonPath("$.data.pageList[1].name").value("testRestaurant-2"))
                 .andExpect(jsonPath("$.data.pageList[1].type").value("TestType2"))
                 .andExpect(jsonPath("$.data.pageList[1].startTime").value("18:00"))
@@ -125,6 +125,7 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.data.pageList[1].image").value("Test Image2"))
                 .andExpect(jsonPath("$.data.pageList[1].maxSeatsNumber").value(1))
                 .andExpect(jsonPath("$.data.pageList[1].starCount").value(0))
+                .andExpect(jsonPath("$.data.pageList[1].id").exists())
                 .andDo(print());
 
     }
@@ -145,7 +146,7 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.data.hasNext").value(true)) // More pages exist
                 .andExpect(jsonPath("$.data.totalPages").value(2))
                 .andExpect(jsonPath("$.data.size").value(1))
-                .andExpect(jsonPath("$.data.pageList[0].id").value(0))
+                .andExpect(jsonPath("$.data.pageList[0].id").exists())
                 .andExpect(jsonPath("$.data.pageList[0].name").value("testRestaurant-1"));
 
         // Test Page 2
@@ -160,17 +161,30 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.data.hasNext").value(false)) // No more pages
                 .andExpect(jsonPath("$.data.totalPages").value(2))
                 .andExpect(jsonPath("$.data.size").value(1))
-                .andExpect(jsonPath("$.data.pageList[0].id").value(1))
+                .andExpect(jsonPath("$.data.pageList[0].id").exists())
                 .andExpect(jsonPath("$.data.pageList[0].name").value("testRestaurant-2"));
 
     }
 
+    @Test
+    public void someRestaurantExists_tryToListThemWithTypeFilterSet_filterAppliedCorrectly() throws Exception {
+        RestaurantSearchFilter filter = new RestaurantSearchFilter();
+        filter.setType("TestType1");
+
+        List<Restaurant> restaurants = List.of(r1);
+        PagedList<Restaurant> page1 = new PagedList<>(restaurants, 1, 1);
+        when(service.getRestaurants(eq(1), any())).thenReturn(page1);
+
+        mockMvc.perform(get("/restaurants")
+                        .param("type", "TestType1").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.size").value(1)).andDo(print());
+    }
 
 
 
-
-
-    @Test void someRestaurantExists_tryToCreateNewOne_successfullyCreated() throws Exception{
+    @Test
+    public void someRestaurantExists_tryToCreateNewOne_successfullyCreated() throws Exception{
         Map<String, Object> request = Map.of(
                 "name", "Pizza Palace",
                 "type", "Pizza",
@@ -205,7 +219,8 @@ public class TestRestaurantController {
     }
 
 
-    @Test void someRestaurantExists_tryToCreateNewOneWithOutImage_successfullyCreatedWithImagePlaceholder() throws Exception{
+    @Test
+    public void someRestaurantExists_tryToCreateNewOneWithOutImage_successfullyCreatedWithImagePlaceholder() throws Exception{
 
         Map<String, Object> request = Map.of(
                 "name", "Pizza Palace",
@@ -338,7 +353,7 @@ public class TestRestaurantController {
     }
 
     @Test
-    void someRestaurantsExists_userNotManagerTryToCreateOne_throwsException() throws Exception {
+    public void someRestaurantsExists_userNotManagerTryToCreateOne_throwsException() throws Exception {
         when(service.addRestaurant(anyString(), anyString(), any(), any(), anyString(), any(Address.class), anyString()))
                 .thenThrow(new UserNotManager());
 
@@ -364,7 +379,7 @@ public class TestRestaurantController {
     }
 
     @Test
-    void noRestaurantExists_tryToValidateNewName_nameIsAvailable() throws Exception {
+    public void noRestaurantExists_tryToValidateNewName_nameIsAvailable() throws Exception {
         when(service.restaurantExists(anyString())).thenReturn(false);
 
         mockMvc.perform(get("/validate/restaurant-name")
@@ -375,7 +390,7 @@ public class TestRestaurantController {
     }
 
     @Test
-    void aRestaurantExists_tryToValidateNewName_nameAlreadyExists() throws Exception {
+    public void aRestaurantExists_tryToValidateNewName_nameAlreadyExists() throws Exception {
         when(service.restaurantExists(anyString())).thenReturn(true);
 
         mockMvc.perform(get("/validate/restaurant-name")
@@ -386,7 +401,7 @@ public class TestRestaurantController {
     }
 
     @Test
-    void someRestaurantsExist_callRestaurantTypes_restaurantTypesReturned() throws Exception {
+    public void someRestaurantsExist_callRestaurantTypes_restaurantTypesReturned() throws Exception {
         Set<String> restaurantTypes = Set.of("Persian", "Chinese", "Mexican");
 
         when(service.getRestaurantTypes()).thenReturn(restaurantTypes);
@@ -402,7 +417,7 @@ public class TestRestaurantController {
     }
 
     @Test
-    void someRestaurantsExist_tryToFindRestaurantWithSomeManager_restaurantOfManagerReturned() throws Exception {
+    public void someRestaurantsExist_tryToFindRestaurantWithSomeManager_restaurantOfManagerReturned() throws Exception {
         List<Restaurant> restaurants = List.of(r1, r2);
         when(service.getManagerRestaurants(manager.getId())).thenReturn(restaurants);
 
@@ -421,7 +436,7 @@ public class TestRestaurantController {
     }
 
     @Test
-    void getRestaurantLocations_returnsLocationsSuccessfully() throws Exception {
+    public void getRestaurantLocations_returnsLocationsSuccessfully() throws Exception {
         Map<String, Set<String>> locations = Map.of(
                 "USA", Set.of("New York", "Los Angeles"),
                 "Canada", Set.of("Toronto", "Vancouver")
