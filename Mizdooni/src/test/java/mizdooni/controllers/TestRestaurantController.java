@@ -2,6 +2,8 @@ package mizdooni.controllers;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import mizdooni.exceptions.DuplicatedRestaurantName;
+import mizdooni.exceptions.UserNotManager;
 import mizdooni.model.Address;
 import mizdooni.model.Restaurant;
 import mizdooni.model.User;
@@ -200,5 +202,85 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.message").value("bad parameter type"));
     }
 
+
+    @Test
+    public void someExists_tryToAddRestaurantButServiceException_failure() throws Exception {
+        Map<String, Object> request = Map.of(
+                "name", "Pizza Palace",
+                "type", "Pizza",
+                "startTime", "09:00",
+                "endTime", "22:00",
+                "description", "Best pizza in town",
+                "image", "http://image.url/pizza.jpg",
+                "address", Map.of(
+                        "country", "USA",
+                        "city", "New York",
+                        "street", "5th Avenue"
+                )
+        );
+
+        when(service.addRestaurant(
+                anyString(), anyString(), any(LocalTime.class), any(LocalTime.class),
+                anyString(), any(Address.class), anyString()
+        )).thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(post("/restaurants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Database error"));
+    }
+    @Test
+    public void someExists_tryToCreateOneWithDuplicateName_failed() throws Exception{
+
+        Map<String, Object> request = Map.of(
+                "name", "Pizza Palace",
+                "type", "Pizza",
+                "startTime", "09:00",
+                "endTime", "22:00",
+                "description", "Best pizza in town",
+                "address", Map.of(
+                        "country", "USA",
+                        "city", "New York",
+                        "street", "5th Avenue"
+                )
+        );
+        when(service.addRestaurant(anyString(), anyString(), any(), any(), anyString(), any(Address.class), anyString()))
+                .thenThrow(new DuplicatedRestaurantName());
+
+        mockMvc.perform(post("/restaurants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error").value("DuplicatedRestaurantName"));
+    }
+
+    @Test
+    void someRestaurantsExists_userNotManagerTryToCreateOne_throwsException() throws Exception {
+        when(service.addRestaurant(anyString(), anyString(), any(), any(), anyString(), any(Address.class), anyString()))
+                .thenThrow(new UserNotManager());
+
+        Map<String, Object> request = Map.of(
+                "name", "Pizza Palace",
+                "type", "Pizza",
+                "startTime", "09:00",
+                "endTime", "22:00",
+                "description", "Best pizza in town",
+                "address", Map.of(
+                        "country", "USA",
+                        "city", "New York",
+                        "street", "5th Avenue"
+                )
+        );
+
+        mockMvc.perform(post("/restaurants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("User is not a manager."));
+    }
 
 }

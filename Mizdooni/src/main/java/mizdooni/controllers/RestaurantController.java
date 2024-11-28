@@ -76,7 +76,6 @@ class RestaurantController {
                 address.getCountry(), address.getCity(), address.getStreet())) {
             throw new ResponseException(HttpStatus.BAD_REQUEST, PARAMS_MISSING);
         }
-
         try {
             int id = restaurantService.addRestaurant(name, type, startTime, endTime, description, address, image);
             return Response.ok("restaurant added", id);
