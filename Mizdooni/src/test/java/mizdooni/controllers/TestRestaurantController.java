@@ -1,6 +1,7 @@
 package mizdooni.controllers;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import mizdooni.model.Address;
 import mizdooni.model.Restaurant;
 import mizdooni.model.User;
@@ -13,15 +14,20 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
+import static mizdooni.controllers.ControllerUtils.PLACEHOLDER_IMAGE;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import java.time.LocalTime;
+import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -81,8 +87,118 @@ public class TestRestaurantController {
                 .andExpect(jsonPath("$.message").value("restaurant not found"));
     }
 
+
+    @Test void someRestaurantExists_tryToCreateNewOne_successfullyCreated() throws Exception{
+        Map<String, Object> request = Map.of(
+                "name", "Pizza Palace",
+                "type", "Pizza",
+                "startTime", "09:00",
+                "endTime", "22:00",
+                "description", "Best pizza in town",
+                "image", "http://image.url/pizza.jpg",
+                "address", Map.of(
+                        "country", "USA",
+                        "city", "New York",
+                        "street", "5th Avenue"
+                )
+        );
+
+        when(service.addRestaurant(
+                eq("Pizza Palace"),
+                eq("Pizza"),
+                eq(LocalTime.of(9, 0)),
+                eq(LocalTime.of(22, 0)),
+                eq("Best pizza in town"),
+                any(Address.class),
+                eq("http://image.url/pizza.jpg")
+        )).thenReturn(1);
+
+        mockMvc.perform(post("/restaurants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("restaurant added"))
+                .andExpect(jsonPath("$.data").value(1));
+    }
+
+
+    @Test void someRestaurantExists_tryToCreateNewOneWithOutImage_successfullyCreatedWithImagePlaceholder() throws Exception{
+
+        Map<String, Object> request = Map.of(
+                "name", "Pizza Palace",
+                "type", "Pizza",
+                "startTime", "09:00",
+                "endTime", "22:00",
+                "description", "Best pizza in town",
+                "address", Map.of(
+                        "country", "USA",
+                        "city", "New York",
+                        "street", "5th Avenue"
+                )
+        );
+
+        when(service.addRestaurant(
+                eq("Pizza Palace"),
+                eq("Pizza"),
+                eq(LocalTime.of(9, 0)),
+                eq(LocalTime.of(22, 0)),
+                eq("Best pizza in town"),
+                any(Address.class),
+                eq(PLACEHOLDER_IMAGE)
+        )).thenReturn(3);
+
+        mockMvc.perform(post("/restaurants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("restaurant added"))
+                .andExpect(jsonPath("$.data").value(3));
+
+
+    }
+
+
     @Test
-    public
+    public void someRestaurantExists_tryToCreateNewOneWithMissingParam_failed() throws Exception{
+
+        Map<String, Object> request = Map.of(
+                "name", "Pizza Palace",
+                "type", "Pizza"
+        );
+
+        mockMvc.perform(post("/restaurants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("parameters missing"));
+
+    }
+
+    @Test
+    public void someRestaurantExists_tryToCreateNewOneWithInvalidParamType_failed() throws Exception {
+        Map<String, Object> request = Map.of(
+                "name", "Pizza Palace",
+                "type", "Pizza",
+                "startTime", "invalid-time",
+                "endTime", "22:00",
+                "description", "Best pizza in town",
+                "address", Map.of(
+                        "country", "USA",
+                        "city", "New York",
+                        "street", "5th Avenue"
+                )
+        );
+
+        mockMvc.perform(post("/restaurants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("bad parameter type"));
+    }
 
 
 }

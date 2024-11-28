@@ -115,4 +115,8 @@ public class Restaurant {
     public List<Review> getReviews() {
         return reviews;
     }
+
+    public String getImageLink() {
+        return imageLink;
+    }
 }
