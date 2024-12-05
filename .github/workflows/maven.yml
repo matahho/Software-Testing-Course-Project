@@ -18,6 +18,9 @@ jobs:
   test_fesadyab:
 
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: Fesadyab
 
     steps:
     - uses: actions/checkout@v4
@@ -28,10 +31,8 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build and Test with Maven
-      working-directory: Fesadyab
       run: mvn test
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
-      working-directory: Fesadyab
       uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
