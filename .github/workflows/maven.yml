@@ -27,8 +27,8 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
-    - run: cd Fesadyab
     - name: Test with Maven
+      working-directory: Software-Testing-Course-Project/Fesadyab
       run: mvn test
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
