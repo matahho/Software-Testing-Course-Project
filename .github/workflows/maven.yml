@@ -10,9 +10,13 @@ name: Fesadyab CI
 
 on:
   push:
-    branches: [ "main" ]
+    path:
+      - 'Fesadyab/**'
+      - '.github/workflows/**'
   pull_request:
-    branches: [ "main" ]
+    path:
+      - 'Fesadyab/**'
+      - '.github/workflows/**'
 
 jobs:
   test_fesadyab:
