@@ -31,7 +31,7 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build and Test with Maven
-      run: mvn clean test -X
+      run: mvn clean test
     - name: Cache Maven dependencies
       uses: actions/cache@v3
       with:
