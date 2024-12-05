@@ -28,8 +28,11 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Test with Maven
-      working-directory: Software-Testing-Course-Project/Fesadyab
+      working-directory: Fesadyab
       run: mvn test
+    - name: Build and Package Maven
+      working-directory: Fesadyab
+      run: mvn clean package
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
