@@ -83,6 +83,15 @@ public class TransactionEngineTest {
     }
 
     @Test
+    public void transactionsWithDifferentGapsExist_getTransactionPatternWithExactThreshold_ZeroReturned(){
+        engine.transactionHistory.add(new Transaction(1, 1, 100, false));
+        engine.transactionHistory.add(new Transaction(2, 1, 200, false));
+        engine.transactionHistory.add(new Transaction(3, 2, 400, false));
+
+        assertEquals(0, engine.getTransactionPatternAboveThreshold(400));
+    }
+
+    @Test
     public void transactionsExists_newTemporaryTransactionComes_newTransactionDetectedAsSuspicious(){
         engine.transactionHistory.add(new Transaction(1, 1, 100, false));
         engine.transactionHistory.add(new Transaction(2, 1, 200, false));
@@ -99,6 +108,15 @@ public class TransactionEngineTest {
         assertEquals(200 , engine.getAverageTransactionAmountByAccount(1));
 
         assertEquals(0, engine.detectFraudulentTransaction(new Transaction(4, 1, 300, true)));
+    }
+
+    @Test
+    public void transactionsExists_newFraudulentTransactionComes_newTransactionDetectedAsSuspiciousWithSpecificAmount(){
+        engine.transactionHistory.add(new Transaction(1, 1, 100, false));
+        engine.transactionHistory.add(new Transaction(2, 1, 200, false));
+        engine.transactionHistory.add(new Transaction(3, 1, 300, false));
+
+        assertEquals(100, engine.detectFraudulentTransaction(new Transaction(4, 1, 500, true)));
     }
 
 }
