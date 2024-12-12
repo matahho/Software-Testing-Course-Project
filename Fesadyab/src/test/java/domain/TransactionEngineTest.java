@@ -101,7 +101,7 @@ public class TransactionEngineTest {
     }
 
     @Test
-    public void tt(){
+    public void detectFraudulentTransaction_whenTransactionPatternIsSuspicious_returnsCorrectFraudScore(){
         engine.transactionHistory.add(new Transaction(1, 1, 100, false));
         engine.transactionHistory.add(new Transaction(2, 1, 200, false));
         engine.transactionHistory.add(new Transaction(3, 1, 300, false));
